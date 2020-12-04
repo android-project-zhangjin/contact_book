@@ -47,6 +47,7 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
         Button editButton;
         Button deleteButton;
         Button callButton;
+        Button tickleButton;
 
 
         private MyItemClickListener myItemClickListener;
@@ -75,10 +76,12 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
             editButton=view.findViewById(R.id.editButton);
             deleteButton=view.findViewById(R.id.deleteButton);
             callButton=view.findViewById(R.id.callButton);
+            tickleButton=view.findViewById(R.id.tickleButton);
             starButton.setOnClickListener(this);
             editButton.setOnClickListener(this);
             deleteButton.setOnClickListener(this);
             callButton.setOnClickListener(this);
+            tickleButton.setOnClickListener(this);
 
 
             myItemClickListener=listener;

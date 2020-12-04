@@ -43,6 +43,9 @@ public class CareText extends AppCompatActivity {
         Button sendrequest=(Button)findViewById(R.id.search);
         responsetext=(TextView)findViewById(R.id.response_text);
         phoneinput=(EditText)findViewById(R.id.phone_input) ;
+        Intent i=getIntent();
+        String p=i.getStringExtra("phone");
+        phoneinput.setText(p);
         sendrequest.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

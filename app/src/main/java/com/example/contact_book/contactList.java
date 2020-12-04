@@ -128,7 +128,7 @@ import static android.app.Activity.RESULT_OK;
             } else {
 
                 //游标——查询
-                Cursor cursor=db.query("contact_list_database",null,"phone="+phone,null,null,null,"name DESC");
+                Cursor cursor=db.query("contact_list_database",null,"phone="+phone,null,null,null,"name"+" collate NOCASE DESC");
                 if(cursor.getCount()==0){
                     Log.d("My","CURSOR_NULL");
                 } else {
@@ -171,7 +171,7 @@ import static android.app.Activity.RESULT_OK;
         mDataList.clear();
 
         //游标
-        Cursor cursor=db.query("contact_list_database",null,null,null,null,null,"name DESC");
+        Cursor cursor=db.query("contact_list_database",null,null,null,null,null,"name collate NOCASE DESC");
         cursor.moveToFirst();
         if(cursor.getCount()==0)
             return;
@@ -243,13 +243,13 @@ import static android.app.Activity.RESULT_OK;
                             star_btn.setBackground(ResourcesCompat.getDrawable(getResources(),R.mipmap.star_yellow,null));
                             dataList.get(position).star=1;
                             values.put("star",1);
-                            db.update("contact_list_database",values,"phone=?",new String[]{dataList.get(position).phone.toString()});
+                            db.update("contact_list_database",values,"phone=?",new String[]{dataList.get(position).phone});
                             break;
                         case 1:
                             star_btn.setBackground(ResourcesCompat.getDrawable(getResources(),R.mipmap.star,null));
                             dataList.get(position).star=0;
                             values.put("star",0);
-                            db.update("contact_list_database",values,"phone=?",new String[]{dataList.get(position).phone.toString()});
+                            db.update("contact_list_database",values,"phone=?",new String[]{dataList.get(position).phone});
                             break;
                     }
 
@@ -259,6 +259,7 @@ import static android.app.Activity.RESULT_OK;
                         view.findViewById(R.id.editButton).setVisibility(View.GONE);
                         view.findViewById(R.id.deleteButton).setVisibility(View.GONE);
                         view.findViewById(R.id.callButton).setVisibility(View.GONE);
+                        view.findViewById(R.id.tickleButton).setVisibility(View.GONE);
                         view.findViewById(R.id.name_TextView).setVisibility(View.VISIBLE);
                         view.findViewById(R.id.phone_TextView).setVisibility(View.VISIBLE);
                         view.findViewById(R.id.relationship_TextView).setVisibility(View.VISIBLE);
@@ -275,6 +276,10 @@ import static android.app.Activity.RESULT_OK;
                     intent.putExtra("option","Edit");
                     intent.putExtra("phone",dataList.get(position).phone);
                     startActivityForResult(intent,2);
+                } else if(id==R.id.tickleButton){
+                    Intent intent=new Intent(getActivity(),CareText.class);
+                    intent.putExtra("phone",dataList.get(position).phone);
+                    startActivity(intent);
                 } else if(id==R.id.deleteButton){
                     AlertDialog.Builder builder=new AlertDialog.Builder(getContext());
                     AlertDialog alert=builder.setIcon(R.mipmap.setting)
@@ -318,6 +323,7 @@ import static android.app.Activity.RESULT_OK;
                     view.findViewById(R.id.editButton).setVisibility(View.VISIBLE);
                     view.findViewById(R.id.deleteButton).setVisibility(View.VISIBLE);
                     view.findViewById(R.id.callButton).setVisibility(View.VISIBLE);
+                    view.findViewById(R.id.tickleButton).setVisibility(View.VISIBLE);
                 }
             }
         });

@@ -66,6 +66,16 @@
         android:visibility="gone"/>
 
     <Button
+        android:id="@+id/tickleButton"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:text="tickle"
+        android:background="#FFFF00"
+        app:layout_constraintEnd_toStartOf="@id/callButton"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/avatarImageView"
+        android:visibility="gone"/>
+    <Button
         android:id="@+id/deleteButton"
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
