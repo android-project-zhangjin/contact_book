@@ -4,6 +4,8 @@ import android.graphics.Bitmap;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.Nullable;
+
 import java.io.Serializable;
 
 public class miniCard {
@@ -27,4 +29,13 @@ public class miniCard {
         avatar=_avatar;
     }
 
+    miniCard(){}
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (obj instanceof miniCard){
+            miniCard card = (miniCard) obj;
+            return this.phone.equals(card.phone);
+        } else return false;
+    }
 }

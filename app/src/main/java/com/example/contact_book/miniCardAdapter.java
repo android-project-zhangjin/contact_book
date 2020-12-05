@@ -1,7 +1,10 @@
 package com.example.contact_book;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.res.Resources;
+import android.graphics.BitmapFactory;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -13,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.core.content.res.ResourcesCompat;
+import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.jetbrains.annotations.NotNull;
@@ -32,22 +36,27 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
         TextView nicknameLabel;
         TextView phoneTextView;
         TextView phoneTypeTextView;
+
         TextView companyTextView;
         TextView companyLabel;
         TextView emailTextView;
         TextView emailLabel;
         TextView remarkTextView;
+
         TextView addressTextView;
         TextView addressLabel;
         TextView noteTextView;
         TextView noteLabel;
         TextView relationshipTextView;
+
         ImageView avatarImageView;
         Button starButton;
         Button editButton;
         Button deleteButton;
         Button callButton;
+
         Button tickleButton;
+
 
 
         private MyItemClickListener myItemClickListener;
@@ -66,11 +75,13 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
             phoneTextView= view.findViewById(R.id.phone_TextView);
             phoneTypeTextView=view.findViewById(R.id.phoneTypeText);
             companyTextView=view.findViewById(R.id.companyText);
+
             emailTextView=view.findViewById(R.id.emailText);
             remarkTextView=view.findViewById(R.id.remarkText);
             addressTextView=view.findViewById(R.id.addressText);
             noteTextView=view.findViewById(R.id.noteText);
             relationshipTextView= view.findViewById(R.id.relationship_TextView);
+
             avatarImageView= view.findViewById(R.id.avatarImageView);
             starButton= view.findViewById(R.id.star_btn_miniView);
             editButton=view.findViewById(R.id.editButton);
@@ -86,6 +97,7 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
 
             myItemClickListener=listener;
             myItemLongClickListener=listener_long;
+
             view.setOnClickListener(this);
             view.setOnLongClickListener(this);
         }
@@ -126,6 +138,8 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
         contactList=_contactList;
     }
 
+
+
     @Override
     @NotNull
     public miniCardAdapter.ViewHolder onCreateViewHolder(@NotNull ViewGroup parent, int viewtype){
@@ -138,6 +152,7 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
     @Override
     public int getItemCount(){return contactList.size();}
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     @Override
     public void onBindViewHolder(@NotNull ViewHolder holder,int position){
         holder.nameTextView.setText(contactList.get(position).name);
@@ -192,8 +207,27 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
         }
 
         holder.relationshipTextView.setText(contactList.get(position).relationship);
-        holder.avatarImageView.setImageBitmap(contactList.get(position).avatar);
 
+        if (contactList.get(position).avatar != null){
+            holder.avatarImageView.setImageBitmap(contactList.get(position).avatar);
+        } else {
+            holder.avatarImageView.setImageDrawable(mContext.getDrawable(R.mipmap.default_avatar));
+        }
+
+        contentSetVisibility(holder);
+    }
+
+    private void contentSetVisibility(ViewHolder holder){
+        //长按出现的按钮默认不可见
+        holder.callButton.setVisibility(View.GONE);
+        holder.editButton.setVisibility(View.GONE);
+        holder.deleteButton.setVisibility(View.GONE);
+
+        //信息显示默认可见
+        holder.nameTextView.setVisibility(View.VISIBLE);
+        holder.phoneTextView.setVisibility(View.VISIBLE);
+        holder.relationshipTextView.setVisibility(View.VISIBLE);
+        holder.phoneTypeTextView.setVisibility(View.VISIBLE);
     }
 
     public void setOnClickListener(ViewHolder.MyItemClickListener listener){

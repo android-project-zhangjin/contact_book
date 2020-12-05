@@ -7,6 +7,8 @@ import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 
 import android.app.AlertDialog;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -17,6 +19,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -276,11 +279,31 @@ public class contact_msg_edit extends AppCompatActivity {
             values.put("avatar",bitmapToByte());
         }
 
+
         if(getIntent().getStringExtra("option").equals("New")){
             if(db.insert("contact_list_database",null,values)==-1){
                 Toast.makeText(contact_msg_edit.this,"该号码已存在",Toast.LENGTH_LONG).show();
             }
             else {
+                ContentValues valuesToSysContactsDataBase = new ContentValues();
+                //向系统联系人表中插入数据
+                Uri rawContactUri = getContentResolver().insert(ContactsContract.RawContacts.CONTENT_URI,valuesToSysContactsDataBase);
+                long rawContactId = ContentUris.parseId(rawContactUri);
+
+                //插入姓名数据
+                valuesToSysContactsDataBase.clear();
+                valuesToSysContactsDataBase.put(ContactsContract.Data.RAW_CONTACT_ID,rawContactId);
+                valuesToSysContactsDataBase.put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.StructuredName.CONTENT_ITEM_TYPE);
+                valuesToSysContactsDataBase.put(ContactsContract.CommonDataKinds.StructuredName.GIVEN_NAME,values.getAsString("name"));
+                getContentResolver().insert(ContactsContract.Data.CONTENT_URI,valuesToSysContactsDataBase);
+
+                //插入电话
+                valuesToSysContactsDataBase.clear();
+                valuesToSysContactsDataBase.put(ContactsContract.Data.RAW_CONTACT_ID,rawContactId);
+                valuesToSysContactsDataBase.put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE);
+                valuesToSysContactsDataBase.put(ContactsContract.CommonDataKinds.Phone.NUMBER,values.getAsString("phone"));
+                getContentResolver().insert(ContactsContract.Data.CONTENT_URI,valuesToSysContactsDataBase);
+
                 Toast.makeText(contact_msg_edit.this," 成功添加新联系人 "+nameInput_EditText.getText().toString(),Toast.LENGTH_SHORT).show();
             }
         } else if(getIntent().getStringExtra("option").equals("Edit")){
@@ -308,11 +331,9 @@ public class contact_msg_edit extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         if(requestCode==1){
             if(data!=null){
-                Log.d("My","1");
                 Uri uri;
                 uri=data.getData();
                 uri=convertUri(uri);
-                Log.d("My","2");
                 if(uri!=null){
                     crop(uri);
                 }
@@ -343,14 +364,14 @@ public class contact_msg_edit extends AppCompatActivity {
     private Uri convertUri(Uri uri) {
         InputStream inputStream;
         try{
-            Log.d("My","1.1");
+
             inputStream=getContentResolver().openInputStream(uri);
             Bitmap bitmap=BitmapFactory.decodeStream(inputStream);
             inputStream.close();
             return saveBitmap(bitmap);
         } catch (IOException e){
             e.printStackTrace();
-            Log.d("My","1.3");
+
             return null;
         }
     }
@@ -390,13 +411,13 @@ public class contact_msg_edit extends AppCompatActivity {
             bitmap.compress(Bitmap.CompressFormat.PNG,100,fileOutputStream);
             fileOutputStream.flush();
             fileOutputStream.close();
-            Log.d("My","1.2.3");
+
             //需要指定Activity名
             return FileProvider.getUriForFile(contact_msg_edit.this,"com.example.contact_book.fileprovider",img);
             //return Uri.fromFile(img);
         }catch(IOException e){
             e.printStackTrace();
-            Log.d("My","1.2.4");
+
             return null;
         }
     }
@@ -409,7 +430,7 @@ public class contact_msg_edit extends AppCompatActivity {
     }
 
     private void crop(Uri uri){
-        Log.d("My","2.1");
+
         Log.d("My",uri.toString());
         Intent intent=new Intent("com.android.camera.action.CROP");
         if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.N){
@@ -419,7 +440,7 @@ public class contact_msg_edit extends AppCompatActivity {
         intent.setDataAndType(uri,"image/*");
         Log.d("My",uri.toString());
         intent.putExtra("crop","true");
-        Log.d("My","2.2");
+
 
         //裁剪框的比例
         intent.putExtra("aspectX",1);
@@ -435,7 +456,7 @@ public class contact_msg_edit extends AppCompatActivity {
                 new File(getExternalCacheDir(),"avatar_cropped.png")
         ));
 
-        Log.d("My","2.3");
+
         startActivityForResult(intent,2);
     }
 

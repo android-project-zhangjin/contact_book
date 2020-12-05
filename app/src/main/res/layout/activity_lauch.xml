@@ -24,13 +24,6 @@
             android:clickable="false" />
 
         <ImageView
-            android:id="@+id/flash"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@mipmap/flash"
-            android:clickable="false" />
-
-        <ImageView
             android:id="@+id/logo_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

@@ -1,75 +1,169 @@
  package com.example.contact_book;
 
 
-import android.Manifest;
-import android.app.AlertDialog;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.os.Bundle;
+ import android.annotation.SuppressLint;
+ import android.app.AlertDialog;
+ import android.content.ContentValues;
+ import android.content.Context;
+ import android.content.DialogInterface;
+ import android.content.Intent;
+ import android.content.SharedPreferences;
+ import android.database.Cursor;
+ import android.database.sqlite.SQLiteDatabase;
+ import android.graphics.Bitmap;
+ import android.graphics.BitmapFactory;
+ import android.net.Uri;
+ import android.os.Bundle;
+ import android.os.Handler;
+ import android.os.Message;
+ import android.provider.ContactsContract;
+ import android.util.Log;
+ import android.view.LayoutInflater;
+ import android.view.View;
+ import android.view.ViewGroup;
+ import android.widget.Button;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.res.ResourcesCompat;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.DiffUtil;
-import androidx.recyclerview.widget.DividerItemDecoration;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+ import androidx.annotation.NonNull;
+ import androidx.annotation.Nullable;
+ import androidx.core.content.res.ResourcesCompat;
+ import androidx.fragment.app.Fragment;
+ import androidx.recyclerview.widget.DiffUtil;
+ import androidx.recyclerview.widget.DividerItemDecoration;
+ import androidx.recyclerview.widget.LinearLayoutManager;
+ import androidx.recyclerview.widget.RecyclerView;
 
-import android.provider.ContactsContract;
-import android.util.Log;
-import android.view.ContextThemeWrapper;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.Toast;
+ import com.getbase.floatingactionbutton.FloatingActionButton;
 
-import com.getbase.floatingactionbutton.FloatingActionButton;
+ import java.text.CollationKey;
+ import java.text.Collator;
+ import java.util.ArrayList;
+ import java.util.Collections;
+ import java.util.Comparator;
+ import java.util.List;
+ import java.util.Locale;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import static android.app.Activity.RESULT_OK;
+ import static android.app.Activity.RESULT_OK;
 
  public class contactList extends Fragment {
+     private static int currPosition = 0;
+
+    private static boolean isFirst=true;
     private static ArrayList<miniCard> dataList=new ArrayList<>();
     private static final List<String> relationshipList=new ArrayList<>();
     private static final List<String> phoneTypeList=new ArrayList<>();
 
-    private View view;
+    private LinearLayoutManager linearLayoutManager=null;
     private RecyclerView recyclerView;
+    private View view;
     private miniCardAdapter mAdapter;
+
+    private Context mContext;
 
     private MySQLiteOpenHelper mySQLiteOpenHelper;
     private SQLiteDatabase db;
+
+
+    @SuppressLint("HandlerLeak")
+    private Handler handler = new Handler(){
+        @SuppressLint({"HandlerLeak", "Recycle"})
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what){
+                case 1:
+                    if (mContext!=null){
+                        MySQLiteOpenHelper mySQLiteOpenHelper_local = new MySQLiteOpenHelper(mContext);
+                        SQLiteDatabase db_local = mySQLiteOpenHelper_local.getReadableDatabase();
+                        Cursor cursor=null;
+                        for (int i = msg.getData().getInt("first"); i <= msg.getData().getInt("last") && i < dataList.size(); i++){
+                            if(dataList.get(i).avatar!=null)
+                                continue;
+                            cursor = db_local.query("contact_list_database",new String[]{"avatar"},"phone=?",new String[]{dataList.get(i).phone},null,null,null);
+                            if(cursor.getCount()!=0 && cursor.moveToFirst()){
+                                //在SQLite中获得的BLOB是字节数组，需要转化为Bitmap用于在ImageView上显示
+                                byte[] avatarByte=cursor.getBlob(cursor.getColumnIndex("avatar"));
+                                Bitmap avatarBitmap;
+                                //判断是否有头像，如果没有则使用默认头像
+                                if(avatarByte!=null){
+                                    avatarBitmap= BitmapFactory.decodeByteArray(avatarByte,0,avatarByte.length);
+                                } else {
+                                    avatarBitmap = null;
+                                }
+                                dataList.get(i).avatar=avatarBitmap;
+                            }
+                            cursor.close();
+                        }
+                        mySQLiteOpenHelper_local.close();
+                        db_local.close();
+                        flash(dataList,mAdapter);
+                    }
+                    break;
+
+            }
+        }
+    };
 
     public contactList() {
         // Required empty public constructor
     }
 
-    @Override
+     @Override
+     public void onCreate(@Nullable Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+         Log.d("My","contactList onCreate");
+         mySQLiteOpenHelper=new MySQLiteOpenHelper(getContext());
+         db=mySQLiteOpenHelper.getWritableDatabase();
+         db.setLocale(Locale.CHINESE);
+
+         mContext=getContext();
+     }
+
+     @Override
+     public void onDestroy() {
+         super.onDestroy();
+         Log.d("My","contactList onDestroy");
+     }
+
+     @Override
+     public void onAttach(@NonNull Context context) {
+         super.onAttach(context);
+         Log.d("My","contactList onAttach");
+     }
+
+     @Override
+     public void onDetach() {
+         super.onDetach();
+         Log.d("My","contactList onDetach");
+     }
+
+     @Override
+     public void onPause() {
+         super.onPause();
+         Log.d("My","contactList onPause");
+         if (linearLayoutManager != null){
+             currPosition = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
+         }
+     }
+
+     @Override
+     public void onStop() {
+         super.onStop();
+         Log.d("My","contactList onStop");
+     }
+
+
+
+     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         view=inflater.inflate(R.layout.fragment_contact_list,container,false);
 
-        mySQLiteOpenHelper=new MySQLiteOpenHelper(getContext());
-        db=mySQLiteOpenHelper.getWritableDatabase();
-
         new InitRelationshipList().initRelationshipList(relationshipList);
         new InitPhoneTypeList().initPhoneTypeList(phoneTypeList);
 
+        initDB();
+
+        Log.d("My","contactList onCreateView");
 
         return view;
     }
@@ -77,10 +171,15 @@ import static android.app.Activity.RESULT_OK;
      @Override
      public void onResume() {
          super.onResume();
-         //在onActivityResult()执行完毕后，执行onResume()，这是一个可以优化性能的地方
-         initDataList(dataList);
+         initAdapter();
+         if(isFirst){
+             initDataList(dataList);
+             isFirst = false;
+         } else {
+             mAdapter.setData(dataList);
+         }
+         //当contactList这个Fragment第一次加载或者从其他Activity或Fragment替换返回后，recyclerView需要重新绑定view，也就是要重新初始化
          initRecyclerView();
-
      }
 
      @Override
@@ -90,7 +189,7 @@ import static android.app.Activity.RESULT_OK;
          //悬浮按钮监听事件
          if(getActivity()!=null){
              //添加联系人
-             FloatingActionButton add_contact_btn=(FloatingActionButton)getActivity().findViewById(R.id.add_contact);
+             FloatingActionButton add_contact_btn= getActivity().findViewById(R.id.add_contact);
              add_contact_btn.setOnClickListener(new View.OnClickListener(){
                  @Override
                  public void onClick(View v) {
@@ -102,7 +201,7 @@ import static android.app.Activity.RESULT_OK;
                  }
              });
 
-             FloatingActionButton flash_btn=(FloatingActionButton)getActivity().findViewById(R.id.phoneCall);
+             FloatingActionButton flash_btn= getActivity().findViewById(R.id.phoneCall);
              flash_btn.setOnClickListener(new View.OnClickListener(){
                  @Override
                  public void onClick(View view) {
@@ -121,31 +220,46 @@ import static android.app.Activity.RESULT_OK;
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(requestCode==1 && resultCode==RESULT_OK){
-            String phone=data.getStringExtra("phone");
-            if(phone==null){
-                Log.d("My","NULL_PHONE");
-            } else {
+        assert data != null;
+        String phone=data.getStringExtra("phone");
 
-                //游标——查询
-                Cursor cursor=db.query("contact_list_database",null,"phone="+phone,null,null,null,"name"+" collate NOCASE DESC");
-                if(cursor.getCount()==0){
-                    Log.d("My","CURSOR_NULL");
-                } else {
-                    cursor.moveToFirst();
-                    ArrayList<miniCard> newDataList = new ArrayList<>(dataList);
+        //游标——查询
+        Cursor cursor=db.query("contact_list_database",null,"phone="+phone,null,null,null,"name collate localized asc");
+        if(cursor.getCount()==0 || phone==null){
+            Log.d("My","CURSOR_NULL");
+        } else {
+            Log.d("My","sub Thread");
 
-                    //读取数据
-                    readFromDatabase(cursor,newDataList);
+            cursor.moveToFirst();
+            ArrayList<miniCard> newDataList = new ArrayList<>(dataList);
 
-                    cursor.close();
-                    flash(newDataList);
-                }
+            if (requestCode==1 && resultCode==RESULT_OK) {
+                //读取数据
+                newDataList.add(readFromDatabase(cursor));
+            } else if (requestCode==2 && resultCode==RESULT_OK){
+                //读取数据
+                miniCard card = readFromDatabase(cursor);
+
+                if(!Collections.replaceAll(newDataList,card,card))
+                    Log.w("My","修改后的替换出现错误");
             }
 
-        } else if(requestCode==2&&resultCode==RESULT_OK){
+            //中文List排序
+            Collections.sort(newDataList, new Comparator<miniCard>() {
+                final Collator collator = Collator.getInstance(Locale.CHINESE);
+                @Override
+                public int compare(miniCard t1, miniCard t2) {
+                    CollationKey key1 = collator.getCollationKey(t1.name);
+                    CollationKey key2 = collator.getCollationKey(t2.name);
+                    return key1.compareTo(key2);
+                }
+            });
+
+            cursor.close();
+            flash(newDataList, mAdapter);
 
         }
+
     }
 
      @Override
@@ -156,14 +270,14 @@ import static android.app.Activity.RESULT_OK;
          db.close();
      }
 
-     private void flash(ArrayList<miniCard> newDataList){
+     private void flash(ArrayList<miniCard> newDataList, miniCardAdapter adapter){
         if(newDataList==null)
             return;
         DiffUtil.DiffResult diffResult= DiffUtil.calculateDiff(new MyDiffCallBack(dataList,newDataList),true);
-        diffResult.dispatchUpdatesTo(mAdapter);
+        diffResult.dispatchUpdatesTo(adapter);
 
         dataList=newDataList;
-        mAdapter.setData(dataList);
+        adapter.setData(dataList);
     }
 
     //初始化联系人界面
@@ -171,12 +285,14 @@ import static android.app.Activity.RESULT_OK;
         mDataList.clear();
 
         //游标
-        Cursor cursor=db.query("contact_list_database",null,null,null,null,null,"name collate NOCASE DESC");
+        Cursor cursor=db.query("contact_list_database",null,null,null,null,null,"name collate localized asc");
         cursor.moveToFirst();
         if(cursor.getCount()==0)
             return;
         do{
-            readFromDatabase(cursor,mDataList);
+            //从程序的本地数据库读取内容
+            //一个耗时的地方,主要是图片访问耗时
+            mDataList.add(readFromDatabase(cursor));
         }while(cursor.moveToNext());
 
         cursor.close();
@@ -185,26 +301,27 @@ import static android.app.Activity.RESULT_OK;
      /**
       * 将数据从数据库中读入，添加到List中
       * @param cursor 游标
-      * @param mDataList 数据集
       */
-    private void readFromDatabase(Cursor cursor, ArrayList<miniCard> mDataList){
-        String name=cursor.getString(cursor.getColumnIndex("name"));
-        String phone=cursor.getString(cursor.getColumnIndex("phone"));
-        String relationship=relationshipList.get(cursor.getInt(cursor.getColumnIndex("relationship")));
-
+    private miniCard readFromDatabase(Cursor cursor){
+        /*
+        //先不从数据库载入图片
         //在SQLite中获得的BLOB是字节数组，需要转化为Bitmap用于在ImageView上显示
         byte[] avatarByte=cursor.getBlob(cursor.getColumnIndex("avatar"));
         Bitmap avatarBitmap;
-
         //判断是否有头像，如果没有则使用默认头像
         if(avatarByte!=null){
             avatarBitmap= BitmapFactory.decodeByteArray(avatarByte,0,avatarByte.length);
         } else {
-            avatarBitmap=BitmapFactory.decodeResource(getResources(),R.mipmap.default_avatar);
+            avatarBitmap = null;
         }
-        if(avatarBitmap==null)
-            Log.d("My","NULL");
-        miniCard card=new miniCard(name,phone,relationship,avatarBitmap);
+        */
+
+
+        miniCard card=new miniCard();
+        card.name = cursor.getString(cursor.getColumnIndex("name"));
+        card.phone = cursor.getString(cursor.getColumnIndex("phone"));
+        card.relationship = relationshipList.get(cursor.getInt(cursor.getColumnIndex("relationship")));
+        card.avatar = null;
         card.phoneType=phoneTypeList.get(cursor.getInt(cursor.getColumnIndex("phoneType")));
         card.company=cursor.getString(cursor.getColumnIndex("company"));
         card.email=cursor.getString(cursor.getColumnIndex("email"));
@@ -213,21 +330,11 @@ import static android.app.Activity.RESULT_OK;
         card.note=cursor.getString(cursor.getColumnIndex("note"));
         card.star=cursor.getInt(cursor.getColumnIndex("star"));
         card.nickname=cursor.getString(cursor.getColumnIndex("nickname"));
-        mDataList.add(card);
 
+        return card;
     }
 
-    private void initRecyclerView(){
-        //布局管理器
-        LinearLayoutManager linearLayoutManager=new LinearLayoutManager(getContext());
-        linearLayoutManager.setOrientation(RecyclerView.VERTICAL);
-
-        //RecyclerView分割线
-        DividerItemDecoration dividerItemDecoration=new DividerItemDecoration(view.getContext(),DividerItemDecoration.VERTICAL);
-
-        //实例化RecyclerView，声明所在布局
-        this.recyclerView=(RecyclerView)view.findViewById(R.id.contact_list);
-
+    private void initAdapter(){
         //实例化名片的Adapter
         this.mAdapter=new miniCardAdapter(dataList,getContext());
 
@@ -236,7 +343,7 @@ import static android.app.Activity.RESULT_OK;
             @Override
             public void onItemClick(View view, int id, final int position) {
                 if (id == R.id.star_btn_miniView) {
-                    Button star_btn=(Button)view.findViewById(id);
+                    Button star_btn= view.findViewById(id);
                     ContentValues values=new ContentValues();
                     switch (dataList.get(position).star){
                         case 0:
@@ -291,7 +398,7 @@ import static android.app.Activity.RESULT_OK;
                                     if(db.delete("contact_list_database","phone=?",new String[]{dataList.get(position).phone})!=-1){
                                         ArrayList<miniCard> newDataList=new ArrayList<>(dataList);
                                         newDataList.remove(position);
-                                        flash(newDataList);
+                                        flash(newDataList,mAdapter);
                                     }
                                 }
                             })
@@ -327,15 +434,46 @@ import static android.app.Activity.RESULT_OK;
                 }
             }
         });
+    }
+
+    private void initRecyclerView(){
+        //布局管理器
+        linearLayoutManager=new LinearLayoutManager(getContext());
+        linearLayoutManager.setOrientation(RecyclerView.VERTICAL);
+        linearLayoutManager.scrollToPosition(currPosition);
+
+
+        //RecyclerView分割线
+        DividerItemDecoration dividerItemDecoration=new DividerItemDecoration(view.getContext(),DividerItemDecoration.VERTICAL);
+
+        //实例化RecyclerView，声明所在布局
+        recyclerView  = view.findViewById(R.id.contact_list);
+
+        recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+                if(newState == RecyclerView.SCROLL_STATE_IDLE) {
+                    if(getActivity() != null){
+                        Message msg = new Message();
+                        Bundle bundle = new Bundle();
+                        bundle.putInt("first",linearLayoutManager.findFirstCompletelyVisibleItemPosition());
+                        bundle.putInt("last",linearLayoutManager.findLastCompletelyVisibleItemPosition());
+                        msg.what = 1;
+                        msg.setData(bundle);
+                        handler.sendMessage(msg);
+                    }
+                }
+            }
+        });
 
         recyclerView.addItemDecoration(dividerItemDecoration);
         recyclerView.setAdapter(mAdapter);
         recyclerView.setLayoutManager(linearLayoutManager);
     }
 
-    /*
+
     private void initDB(){
-        SharedPreferences sharedPreferences = getContext().getSharedPreferences("contact_book",0);
+        SharedPreferences sharedPreferences = requireContext().getSharedPreferences("contact_book",0);
         boolean isFirst=sharedPreferences.getBoolean("first",true);
         SharedPreferences.Editor editor=sharedPreferences.edit();
 
@@ -349,21 +487,20 @@ import static android.app.Activity.RESULT_OK;
                     ContactsContract.Contacts.DISPLAY_NAME
             };
             //根据Uri查询相应的ContentProvider，cursor为获取到的数据集
-            Cursor cursor = getContext().getContentResolver().query(uri, projection, null, null, null);
+            Cursor cursor = requireContext().getContentResolver().query(uri, projection, null, null, null);
             if (cursor != null && cursor.moveToFirst()) {
                 do {
-                    ContentValues values=new ContentValues();
-                    Long id = cursor.getLong(0);
+                    long id = cursor.getLong(0);
                     //获取姓名
                     String name = cursor.getString(1);
                     //指定获取NUMBER这一数据
                     String[] phoneProjection = new String[] {
                             ContactsContract.CommonDataKinds.Phone.NUMBER
                     };
-                    values.put("name",name);
+
 
                     //根据联系人的ID获取此人的电话号码
-                    Cursor phonesCusor = getContext().getContentResolver().query(
+                    @SuppressLint("Recycle") Cursor phonesCursor = requireContext().getContentResolver().query(
                             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
                             phoneProjection,
                             ContactsContract.CommonDataKinds.Phone.CONTACT_ID + "=" + id,
@@ -371,16 +508,23 @@ import static android.app.Activity.RESULT_OK;
                             null);
 
                     //获取电话号码
-                    if (phonesCusor != null && phonesCusor.moveToFirst()) {
-                        String num = phonesCusor.getString(0);
-                        values.put("phone",num);
+                    if (phonesCursor != null && phonesCursor.getCount() != 0) {
+                        phonesCursor.moveToFirst();
+                        do{
+                            String num = phonesCursor.getString(0);
+                            ContentValues values=new ContentValues();
+                            values.put("name",name);
+                            values.put("phone",num.replace(" ", ""));
+                            db.insert("contact_list_database",null,values);
+                        } while(phonesCursor.moveToNext());
                     }
-                    db.insert("contact_list_database",null,values);
+
                 } while (cursor.moveToNext());
             }
-
+            if (cursor != null) {
+                cursor.close();
+            }
         }
-        editor.commit();
+        editor.apply();
     }
-     */
 }
