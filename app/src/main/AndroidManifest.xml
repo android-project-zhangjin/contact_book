@@ -20,7 +20,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true">
-        <activity android:name=".RecordActivity" />
+        <activity android:name=".RecordActivity"
+            android:label="通话详情"/>
         <activity android:name=".CareText" />
         <activity
             android:name=".contact_msg_edit"
@@ -43,9 +44,6 @@
             android:authorities="com.example.contact_book.provider"
             android:enabled="true"
             android:exported="true" />
-            android:name="com.example.contact_book.MyProvider"
-            android:exported="true"
-            android:enabled="true"/>
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.example.contact_book.fileprovider"

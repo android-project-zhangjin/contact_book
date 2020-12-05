@@ -1,11 +1,8 @@
 package com.example.contact_book;
 
-import android.Manifest;
-import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 
 
@@ -81,7 +78,7 @@ public class RecordFragment extends Fragment {
             @Override
             public void Onclick(String s) {
                 String number = s;
-                Log.d(TAG, number);
+                //Log.d(TAG, number);
                 Intent intent = new Intent(getActivity(), RecordActivity.class);
                 intent.putExtra("number", number);
                 startActivity(intent);
@@ -110,21 +107,6 @@ public class RecordFragment extends Fragment {
         Log.d(TAG, "record_list初始化数据");
         //checkContentProvider();
         initDB();
-
-//         判断归属地数据库是否有数据
-//        try {
-//            Thread.sleep(10000);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//        Cursor cursor2 = db.rawQuery("select * from number_place_database", null);
-//        while (cursor2.moveToNext()){
-//            String number = cursor2.getString(cursor2.getColumnIndex("number"));
-//            String place = cursor2.getString(cursor2.getColumnIndex("place"));
-//            Log.d(TAG,number + place);
-//        }
-
-
         Cursor cursor = db.rawQuery("select *,max(datetime(date)) from record_list_database group by name", null);
         if (cursor == null)
             Toast.makeText(context, "数据库无通话记录。", Toast.LENGTH_LONG).show();
@@ -254,35 +236,37 @@ public class RecordFragment extends Fragment {
     private String getPlace(final String number) {
         String address = "https://tcc.taobao.com/cc/json/mobile_tel_segment.htm?tel=" + number;
         final String[] place = new String[2];
+        final int[] flag = new int[1];
         HttpUtil.sendHttpRequest(address, new CareText.HttpCallbackListener() {
             @Override
             public void onFinish(String response) {
                 String content = response.split("[=]")[1];
                 place[0] = "未知";
-                Log.d(TAG, content);
                 try {
                     JSONObject jsonObject = new JSONObject(content);
                     place[0] = jsonObject.optString("province", null);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
+                Log.d(TAG, "onFinish中获取的返回值"+content);
                 place[1] = number; //保证子线程执行完后才继续主线程
-                Log.d(TAG, place[0]);
+                flag[0] = 1;
+                //Log.d(TAG, place[0]);
             }
-
             @Override
             public void onError(Exception e) {
                 e.printStackTrace();
             }
         });
         try {
-            Thread.sleep(200);  //要休眠100毫秒，不然这儿太快出问题
+            Thread.sleep(200);  //要休眠200毫秒，不然这儿太快出问题
         } catch (Exception e) {
             e.printStackTrace();
         }
-        while (place[1] == null) {
-            Log.d(TAG,place[0]+"\t");
+        while (flag[0]!=1){
+            //循环等待
         }
+        Log.d(TAG,"变成循环等待,取得的地址："+ place[0]+"\t");
         return place[0];
     }
 
