@@ -59,7 +59,11 @@ public class RecordFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.record_list, container, false);
-        initRecord(); // 初始化数据
+        long startTime = System.currentTimeMillis(); // 获取开始时间
+        initRecord();       // 初始化通话记录数据
+        long endTime = System.currentTimeMillis(); // 获取结束时间
+        Log.e("MAIN", "初始化数据时间： " + (endTime - startTime) + "ms");
+
         //创建View
         recyclerView = (RecyclerView) view.findViewById(R.id.record_recyclerview);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity(), LinearLayoutManager.VERTICAL, false);
@@ -85,7 +89,7 @@ public class RecordFragment extends Fragment {
             }
         });
         recyclerView.setAdapter(adapter);
-        Log.d(TAG, "record_fragment加载完成");
+        Log.d(TAG, "item点击事件设置完成");
     }
 
     @Override
@@ -130,14 +134,37 @@ public class RecordFragment extends Fragment {
     }
 
     private void initDB() {
+        final List<String> number_place = new ArrayList<String>();  //保存已在number_place数据库中的号码
+        final List<String> number_place_wait = new ArrayList<String>();  //保存准备获取归属地的号码
+        final List<String> number_place_new = new ArrayList<String>();    //保存准备插入number_place数据库的新信息
+        List<String> number_date = new ArrayList<String>();         //保存已在通话记录数据库中的号码和日期信息
+        List<String> number_date_new = new ArrayList<String>();         //保存准备插入通话记录数据库的新信息
+        //从数据库读取数据初始化两个list
+        Cursor cursor_place = db.rawQuery("select * from number_place_database", null);
+        if (cursor_place.getCount() != 0)
+            while (cursor_place.moveToNext()) {
+                String num_place = cursor_place.getString(cursor_place.getColumnIndex("number"));
+                number_place.add(num_place);
+            }
+        else
+            Toast.makeText(context, "首次查询归属地，请稍等", Toast.LENGTH_SHORT).show();
+        Cursor cursor_num_date = db.rawQuery("select * from record_list_database", null);
+        if (cursor_num_date.getCount()!=0)
+            while (cursor_num_date.moveToNext()) {
+                String num_date = cursor_num_date.getString(cursor_num_date.getColumnIndex("number")) +
+                        cursor_num_date.getString(cursor_num_date.getColumnIndex("date"));
+                number_date.add(num_date);
+            }
+
         Cursor cursor = context.getContentResolver().query(CallLog.Calls.CONTENT_URI, null,
                 null, null, "DATE ASC");  //正排序
         //依次读取cursor =====注意!虚拟机没有通话记录，要自己先打几个
-        final List<String> number_place = new ArrayList<String>();
         if (cursor == null)
             Toast.makeText(context, "暂无通话记录。", Toast.LENGTH_LONG).show();
-        else
+        else {
+            long startTime = System.currentTimeMillis(); // 获取开始时间
             while (cursor.moveToNext()) {
+                //初始化各种数据
                 String name = cursor.getString(cursor.getColumnIndex(CallLog.Calls.CACHED_NAME));   //姓名
                 final String number = cursor.getString(cursor.getColumnIndex(CallLog.Calls.NUMBER));      //号码
                 long dateLong = cursor.getLong(cursor.getColumnIndex(CallLog.Calls.DATE));          //获取通话日期，时间戳
@@ -149,29 +176,59 @@ public class RecordFragment extends Fragment {
                 String place = "";
                 if (name == null || name.equals("")) //没有姓名的联系人用电话号码代替
                     name = number;
-                Cursor cursor1 = db.rawQuery("select * from record_list_database where name=? and number = ? and date =?",
-                        new String[]{name, number, date});
-                if (cursor1.getCount() == 0) {    //如果数据是不重复的
-                    insertDB(name, number, date, time, type);    //插入进数据库
-                    //更新归属地数据库
-                    final String number2 = number;
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!number_place.contains(number2)) {
-                                number_place.add(number2);
-                                Cursor cursor2 = db.rawQuery("select * from number_place_database where number = ?", new String[]{number2});
-                                if (cursor2.getCount() == 0) {    //如果该号码不存在
-                                    ContentValues values = new ContentValues();//插入进数据库
-                                    values.put("number", number2);
-                                    values.put("place", getPlace(number2));
-                                    db.insert("number_place_database", null, values);
-                                }
-                            }
-                        }
-                    }).start();
+                if (!number_date.contains(number + date)) {   //如果数据是不重复的,单条通话记录放入number_date_new
+                    number_date_new.add(name+","+number+","+date+","+time+","+type);
+                    if (!number_place.contains(number)||number_place.size()==0) {   //把要更新归属地的号码插入列表number_place_wait
+                        number_place.add(number);
+                        number_place_wait.add(number);
+                    }
                 }
             }
+            //插入联系人信息
+            if (number_date_new.size()>0){
+                StringBuilder sql = new StringBuilder("insert into record_list_database (name,number,date,time,type) values ");
+                for (String ndn : number_date_new) {
+                    try {
+                        String content = "( \"" + ndn.split(",")[0] + "\",\"" + ndn.split(",")[1] + "\",\""
+                                + ndn.split(",")[2] + "\",\""+ ndn.split(",")[3] + "\",\""+ ndn.split(",")[4] + "\"),";
+                        sql.append(content);
+                    } catch (Exception e) {}
+                }
+                String str_sql = sql.toString();
+                str_sql = str_sql.substring(0, str_sql.length() - 1) + ";";
+                Log.e(TAG, "date要插入的语句:" + str_sql);
+                db.execSQL(str_sql);
+            }
+            //获取归属地
+            if (number_place_wait.size() > 0) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (String npw : number_place_wait)
+                            number_place_new.add(npw + "," + getPlace(npw));
+                        //把新的归属地数据插入num_place
+                        if (number_place_new.size() > 0) {
+                            StringBuilder sql = new StringBuilder("insert into number_place_database values ");
+                            for (String npn : number_place_new) {
+                                Log.d(TAG, npn);
+                                try {
+                                    String content = "( " + npn.split(",")[0] + ",\"" + npn.split(",")[1] + "\"),";
+                                    sql.append(content);
+                                } catch (Exception e) {
+
+                                }
+                            }
+                            String str_sql = sql.toString();
+                            str_sql = str_sql.substring(0, str_sql.length() - 1) + ";";
+                            Log.e(TAG, "place要插入的语句:" + str_sql);
+                            db.execSQL(str_sql);
+                        }
+                    }
+                }).start();
+            }
+            long endTime = System.currentTimeMillis(); // 获取结束时间
+            Log.e("MAIN", "循环一遍通话记录的时间： " + (endTime - startTime) + "ms");
+        }
     }
 
     public void refresh() {
@@ -248,11 +305,12 @@ public class RecordFragment extends Fragment {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                Log.d(TAG, "onFinish中获取的返回值"+content);
+                Log.d(TAG, "onFinish中获取的返回值" + content);
                 place[1] = number; //保证子线程执行完后才继续主线程
                 flag[0] = 1;
                 //Log.d(TAG, place[0]);
             }
+
             @Override
             public void onError(Exception e) {
                 e.printStackTrace();
@@ -263,10 +321,10 @@ public class RecordFragment extends Fragment {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        while (flag[0]!=1){
+        while (flag[0] != 1) {
             //循环等待
         }
-        Log.d(TAG,"变成循环等待,取得的地址："+ place[0]+"\t");
+        Log.d(TAG, "变成循环等待,取得的地址：" + place[0] + "\t");
         return place[0];
     }
 
