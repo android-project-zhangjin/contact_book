@@ -495,6 +495,7 @@ public class contact_msg_edit extends AppCompatActivity {
                         public void onClick(DialogInterface dialogInterface, int i) {
                             //取消新增
                             setResult(RESULT_CANCELED);
+                            primaryKeyReturn();
                             finish();
                         }
                     }).create();

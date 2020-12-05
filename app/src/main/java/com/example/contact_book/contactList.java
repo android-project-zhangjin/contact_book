@@ -76,8 +76,8 @@
                         SQLiteDatabase db_local = mySQLiteOpenHelper_local.getReadableDatabase();
                         Cursor cursor=null;
                         for (int i = msg.getData().getInt("first"); i <= msg.getData().getInt("last") && i < dataList.size(); i++){
-                            if(dataList.get(i).avatar!=null)
-                                continue;
+                            if(dataList.get(i).avatar != null)
+                                dataList.get(i).avatar.recycle();
                             cursor = db_local.query("contact_list_database",new String[]{"avatar"},"phone=?",new String[]{dataList.get(i).phone},null,null,null);
                             if(cursor.getCount()!=0 && cursor.moveToFirst()){
                                 //在SQLite中获得的BLOB是字节数组，需要转化为Bitmap用于在ImageView上显示
