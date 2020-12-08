@@ -3,6 +3,9 @@ package com.example.contact_book;
 import android.graphics.Color;
 import android.widget.LinearLayout;
 
+/*
+使用该类实现滚动选择器的末端模糊功能
+ */
 public class LinearGradient {
     private int mStartColor;
     private int mEndColor;

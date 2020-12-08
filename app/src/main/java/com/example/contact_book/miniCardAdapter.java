@@ -1,22 +1,17 @@
 package com.example.contact_book;
 
 import android.annotation.SuppressLint;
-import android.content.ContentValues;
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.BitmapFactory;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.res.ResourcesCompat;
-import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +20,8 @@ import java.util.List;
 
 public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHolder> {
     private List<miniCard> contactList;
-    private Context mContext;
+
+    private final Context mContext;
 
     private ViewHolder.MyItemClickListener myItemClickListener;
     private ViewHolder.MyItemLongClickListener myItemLongClickListener;
@@ -57,13 +53,13 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
 
         Button tickleButton;
 
-
-
-        private MyItemClickListener myItemClickListener;
-        private MyItemLongClickListener myItemLongClickListener;
+        //Item点击/长按事件监听器
+        private final MyItemClickListener myItemClickListener;
+        private final MyItemLongClickListener myItemLongClickListener;
 
         private ViewHolder(View view, MyItemClickListener listener, MyItemLongClickListener listener_long){
             super(view);
+            //为组件绑定View
             nicknameLabel=view.findViewById(R.id.nicknameLabel);
             companyLabel=view.findViewById(R.id.companyLabel);
             emailLabel=view.findViewById(R.id.emailLabel);
@@ -102,10 +98,8 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
             view.setOnLongClickListener(this);
         }
 
-
         @Override
         public void onClick(View view) {
-            //int position=(int)view.getTag();
             if(myItemClickListener!=null){
                 myItemClickListener.onItemClick(view,view.getId(),getLayoutPosition());
 
@@ -139,13 +133,10 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
     }
 
 
-
     @Override
     @NotNull
     public miniCardAdapter.ViewHolder onCreateViewHolder(@NotNull ViewGroup parent, int viewtype){
         View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.minicard_item,parent,false);
-
-        //View view=View.inflate(context,R.layout.minicard_item,null);
         return new ViewHolder(view,myItemClickListener,myItemLongClickListener);
     }
 
@@ -155,46 +146,83 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
     @SuppressLint("UseCompatLoadingForDrawables")
     @Override
     public void onBindViewHolder(@NotNull ViewHolder holder,int position){
-        holder.nameTextView.setText(contactList.get(position).name);
-        holder.nicknameTextView.setText(contactList.get(position).nickname);
-        if(contactList.get(position).nickname == null || contactList.get(position).nickname.equals("")){
+        setTextVisibilityForView(contactList.get(position), holder);
+
+        if (contactList.get(position).avatar != null){
+            holder.avatarImageView.setImageBitmap(BitmapFactory.decodeByteArray(contactList.get(position).avatar,0,contactList.get(position).avatar.length));
+        } else {
+            holder.avatarImageView.setImageDrawable(mContext.getDrawable(R.mipmap.default_avatar));
+        }
+
+        contentSetVisibility(holder);
+    }
+
+    /**
+     * 设置组件的Visibility
+     * @param tmp Item
+     * @param holder ViewHolder
+     */
+    private void setTextVisibilityForView(miniCard tmp, ViewHolder holder){
+        holder.nameTextView.setText(tmp.name);
+        holder.phoneTextView.setText(tmp.phone);
+        holder.phoneTypeTextView.setText(tmp.phoneType);
+        holder.relationshipTextView.setText(tmp.relationship);
+
+        //当对应Text为空时，设置Visibility为GONE；否则为Visible
+
+        holder.nicknameTextView.setText(tmp.nickname);
+        if(tmp.nickname == null || tmp.nickname.equals("")){
             holder.nicknameLabel.setVisibility(View.GONE);
             holder.nicknameTextView.setVisibility(View.GONE);
+        } else {
+            holder.nicknameLabel.setVisibility(View.VISIBLE);
+            holder.nicknameTextView.setVisibility(View.VISIBLE);
         }
 
-        holder.phoneTextView.setText(contactList.get(position).phone);
-        holder.phoneTypeTextView.setText(contactList.get(position).phoneType);
-
-        holder.companyTextView.setText(contactList.get(position).company);
-        if(contactList.get(position).company == null || contactList.get(position).company.equals("")){
+        holder.companyTextView.setText(tmp.company);
+        if(tmp.company == null || tmp.company.equals("")){
             holder.companyTextView.setVisibility(View.GONE);
             holder.companyLabel.setVisibility(View.GONE);
+        } else {
+            holder.companyTextView.setVisibility(View.VISIBLE);
+            holder.companyLabel.setVisibility(View.VISIBLE);
         }
 
-        holder.emailTextView.setText(contactList.get(position).email);
-        if(contactList.get(position).email==null || contactList.get(position).email.equals("")){
+        holder.emailTextView.setText(tmp.email);
+        if(tmp.email==null || tmp.email.equals("")){
             holder.emailTextView.setVisibility(View.GONE);
             holder.emailLabel.setVisibility(View.GONE);
+        } else {
+            holder.emailTextView.setVisibility(View.VISIBLE);
+            holder.emailLabel.setVisibility(View.VISIBLE);
         }
 
-        holder.remarkTextView.setText(contactList.get(position).remark);
-        if(contactList.get(position).remark==null || contactList.get(position).remark.equals("")){
+        holder.remarkTextView.setText(tmp.remark);
+        if(tmp.remark==null || tmp.remark.equals("")){
             holder.remarkTextView.setVisibility(View.GONE);
+        } else {
+            holder.remarkTextView.setVisibility(View.VISIBLE);
         }
 
-        holder.addressTextView.setText(contactList.get(position).address);
-        if(contactList.get(position).address==null || contactList.get(position).address.equals("")){
+        holder.addressTextView.setText(tmp.address);
+        if(tmp.address==null || tmp.address.equals("")){
             holder.addressTextView.setVisibility(View.GONE);
             holder.addressLabel.setVisibility(View.GONE);
+        } else {
+            holder.addressTextView.setVisibility(View.VISIBLE);
+            holder.addressLabel.setVisibility(View.VISIBLE);
         }
 
-        holder.noteTextView.setText(contactList.get(position).note);
-        if(contactList.get(position).note==null || contactList.get(position).note.equals("")){
+        holder.noteTextView.setText(tmp.note);
+        if(tmp.note==null || tmp.note.equals("")){
             holder.noteTextView.setVisibility(View.GONE);
             holder.noteLabel.setVisibility(View.GONE);
+        } else {
+            holder.noteTextView.setVisibility(View.VISIBLE);
+            holder.noteLabel.setVisibility(View.VISIBLE);
         }
 
-        switch(contactList.get(position).star){
+        switch(tmp.star){
             case 0:
                 holder.starButton.setBackground(ResourcesCompat.getDrawable(mContext.getResources(),R.mipmap.star,null));
                 break;
@@ -205,15 +233,20 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
                 holder.starButton.setBackground(ResourcesCompat.getDrawable(mContext.getResources(),R.mipmap.star_black,null));
                 break;
         }
+    }
 
-        holder.relationshipTextView.setText(contactList.get(position).relationship);
-
-        if (contactList.get(position).avatar != null){
-            holder.avatarImageView.setImageBitmap(contactList.get(position).avatar);
-        } else {
-            holder.avatarImageView.setImageDrawable(mContext.getDrawable(R.mipmap.default_avatar));
+    /**
+     *MyDiffUtil检测内容差异进行局部更新——主要用于提高图像的处理能力
+     */
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position, @NonNull List<Object> payloads) {
+        if(payloads.isEmpty()){
+            onBindViewHolder(holder,position);
+            return;
         }
-
+        miniCard tmp = (miniCard) payloads.get(0);
+        holder.avatarImageView.setImageBitmap(BitmapFactory.decodeByteArray(tmp.avatar,0,tmp.avatar.length));
+        setTextVisibilityForView(tmp,holder);
         contentSetVisibility(holder);
     }
 
@@ -222,6 +255,7 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
         holder.callButton.setVisibility(View.GONE);
         holder.editButton.setVisibility(View.GONE);
         holder.deleteButton.setVisibility(View.GONE);
+        holder.tickleButton.setVisibility(View.GONE);
 
         //信息显示默认可见
         holder.nameTextView.setVisibility(View.VISIBLE);

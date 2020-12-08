@@ -7,7 +7,6 @@ import androidx.core.content.FileProvider;
 import androidx.core.content.res.ResourcesCompat;
 
 import android.app.AlertDialog;
-import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
@@ -41,11 +40,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class contact_msg_edit extends AppCompatActivity {
+    //连接、操作数据库使用的变量
     private MySQLiteOpenHelper mySQLiteOpenHelper;
     private SQLiteDatabase db;
+    
+    //存入数据库的值
     ContentValues values=new ContentValues();
+    
+    //存储图像bitmap
     Bitmap bitmap;
-
+    
+    //基本控件
     ImageView avatarImage;
     EditText nameInput_EditText;
     EditText nicknameInput_EditText;
@@ -58,8 +63,11 @@ public class contact_msg_edit extends AppCompatActivity {
     Button starButton;
     Button relationshipButton;
     Button phoneTypeButton;
+    
+    //星标值——0：正常；1：特殊标记；2：黑名单
     int starValue=0;
 
+    //phoneType与relationship的字符串数组，将数据库中得到的Integer在屏幕上以String显示
     List<String> phoneTypeList=new ArrayList<>();
     List<String> relationshipList=new ArrayList<>();
 
@@ -72,6 +80,7 @@ public class contact_msg_edit extends AppCompatActivity {
         mySQLiteOpenHelper=new MySQLiteOpenHelper(this);
         db=mySQLiteOpenHelper.getWritableDatabase();
 
+        //滚动选择控件
         final StringPicker relationshipPicker= findViewById(R.id.relationshipPicker);
         final StringPicker phoneTypePicker=findViewById(R.id.phoneTypeInput_StringPicker);
 
@@ -105,12 +114,14 @@ public class contact_msg_edit extends AppCompatActivity {
 
         //如果为编辑操作，需要从数据库读数据到界面上
         if(getIntent().getStringExtra("option").equals("Edit")){
-            if(getIntent().getStringExtra("phone").equals(""))
+            //phone意外为空
+            if(getIntent().getStringExtra("phone") == null || getIntent().getStringExtra("phone").equals(""))
                 return;
-            else initFrom(relationshipPicker,phoneTypePicker);
+            else 
+                initForm();
         }
 
-        //点击——切换星标/普通
+        //点击——切换特殊/普通
         starButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
@@ -124,7 +135,7 @@ public class contact_msg_edit extends AppCompatActivity {
             }
         });
 
-        //长按——切换黑标/普通
+        //长按——切换黑名单/普通
         starButton.setOnLongClickListener(new View.OnLongClickListener(){
             @Override
             public boolean onLongClick(View view) {
@@ -140,6 +151,7 @@ public class contact_msg_edit extends AppCompatActivity {
             }
         });
 
+        //点击关系按钮，使用滚动选择器进行操作
         relationshipButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -148,6 +160,7 @@ public class contact_msg_edit extends AppCompatActivity {
             }
         });
 
+        //点击电话类型按钮，使用滚动选择器进行操作
         phoneTypeButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
@@ -158,8 +171,12 @@ public class contact_msg_edit extends AppCompatActivity {
 
     }
 
+    /**
+     * 姓名信息输入扩展——按钮监听
+     * @param view View
+     */
     public void nameExpandButtonClick(View view){
-        LinearLayout nameExpand_LinearLayout=(LinearLayout) findViewById(R.id.nameExpand_LinearLayout);
+        LinearLayout nameExpand_LinearLayout= findViewById(R.id.nameExpand_LinearLayout);
         if(nameExpand_LinearLayout.getVisibility()==View.GONE){
             nameExpand_LinearLayout.setVisibility(View.VISIBLE);
             view.setBackground(ContextCompat.getDrawable(getBaseContext(),R.mipmap.arrow_up));
@@ -169,8 +186,12 @@ public class contact_msg_edit extends AppCompatActivity {
         }
     }
 
+    /**
+     * 电话信息输入扩展——按钮监听
+     * @param view View
+     */
     public void phoneExpandButtonClick(View view){
-        LinearLayout phoneExpand_LinearLayout=(LinearLayout)findViewById(R.id.phoneExpand_LinearLayout);
+        LinearLayout phoneExpand_LinearLayout= findViewById(R.id.phoneExpand_LinearLayout);
         if(phoneExpand_LinearLayout.getVisibility()==View.GONE){
             phoneExpand_LinearLayout.setVisibility(View.VISIBLE);
             view.setBackground(ContextCompat.getDrawable(getBaseContext(),R.mipmap.arrow_up));
@@ -180,8 +201,12 @@ public class contact_msg_edit extends AppCompatActivity {
         }
     }
 
+    /**
+     * 电子邮箱信息输入扩展——按钮监听
+     * @param view View
+     */
     public void emailExpandButtonClick(View view){
-        LinearLayout emailExpand_LinearLayout=(LinearLayout)findViewById(R.id.emailExpand_LinearLayout);
+        LinearLayout emailExpand_LinearLayout=findViewById(R.id.emailExpand_LinearLayout);
         if(emailExpand_LinearLayout.getVisibility()==View.GONE){
             emailExpand_LinearLayout.setVisibility(View.VISIBLE);
             view.setBackground(ContextCompat.getDrawable(getBaseContext(),R.mipmap.arrow_up));
@@ -191,6 +216,10 @@ public class contact_msg_edit extends AppCompatActivity {
         }
     }
 
+    /**
+     * 保存——按钮监听
+     * @param view View
+     */
     public void saveButtonClick(View view){
         if(nameInput_EditText.getText().toString().isEmpty() || phoneInput_EditText.getText().toString().isEmpty()){
             Toast.makeText(getBaseContext(),"Name & Phone 不得为空",Toast.LENGTH_SHORT).show();
@@ -201,6 +230,9 @@ public class contact_msg_edit extends AppCompatActivity {
         }
     }
 
+    /**
+     * 对控件进行初始化
+     */
     private void initComponent(){
         avatarImage=findViewById(R.id.avatarImage);
         nameInput_EditText=findViewById(R.id.nameInput_EditText);
@@ -217,26 +249,32 @@ public class contact_msg_edit extends AppCompatActivity {
 
     }
 
-    private void initFrom(StringPicker relationshipPicker, StringPicker phoneTypePicker){
+    /**
+     * 为信息输入界面设置原有的信息
+     */
+    private void initForm(){
+        //游标——在数据库中查询主码为传入phone的项
         Cursor cursor=db.query("contact_list_database",null,"phone="+getIntent().getStringExtra("phone"),
                 null,null,null,null);
-        if(cursor.getCount()==0)
+        //查询结果为空
+        if(cursor.getCount()==0){
+            //关闭游标
+            cursor.close();
             return;
+        }
 
         cursor.moveToFirst();
 
-        byte[] avatarByte=cursor.getBlob(cursor.getColumnIndex("avatar"));
-        Bitmap avatarBitmap;
         //判断是否有头像，如果没有则使用默认头像
-        if(avatarByte!=null){
-            avatarBitmap= BitmapFactory.decodeByteArray(avatarByte,0,avatarByte.length);
+        if(cursor.getBlob(cursor.getColumnIndex("avatar"))!=null){
+            avatarImage.setImageBitmap(BitmapFactory.decodeByteArray(cursor.getBlob(cursor.getColumnIndex("avatar")),0,cursor.getBlob(cursor.getColumnIndex("avatar")).length));
         } else {
-            avatarBitmap=BitmapFactory.decodeResource(getResources(),R.mipmap.default_avatar);
+            avatarImage.setImageBitmap(BitmapFactory.decodeResource(getResources(),R.mipmap.default_avatar));
         }
-        if(avatarBitmap==null)
-            Log.d("My","NULL");
 
+        //设置控件文本
         nameInput_EditText.setText(cursor.getString(cursor.getColumnIndex("name")));
+        nicknameInput_EditText.setText(cursor.getString(cursor.getColumnIndex("nickname")));
         phoneInput_EditText.setText(cursor.getString(cursor.getColumnIndex("phone")));
         phoneInput_EditText.setEnabled(false);
         companyInput_EditText.setText(cursor.getString(cursor.getColumnIndex("company")));
@@ -265,6 +303,9 @@ public class contact_msg_edit extends AppCompatActivity {
         cursor.close();
     }
 
+    /**
+     * 将输入的数据保存到数据库
+     */
     private void saveInDatabase(){
         values.put("name",nameInput_EditText.getText().toString());
         values.put("nickname",nicknameInput_EditText.getText().toString());
@@ -278,7 +319,6 @@ public class contact_msg_edit extends AppCompatActivity {
         if(bitmap!=null){
             values.put("avatar",bitmapToByte());
         }
-
 
         if(getIntent().getStringExtra("option").equals("New")){
             if(db.insert("contact_list_database",null,values)==-1){
@@ -303,22 +343,17 @@ public class contact_msg_edit extends AppCompatActivity {
                 valuesToSysContactsDataBase.put(ContactsContract.Data.MIMETYPE, ContactsContract.CommonDataKinds.Phone.CONTENT_ITEM_TYPE);
                 valuesToSysContactsDataBase.put(ContactsContract.CommonDataKinds.Phone.NUMBER,values.getAsString("phone"));
                 getContentResolver().insert(ContactsContract.Data.CONTENT_URI,valuesToSysContactsDataBase);
-
                 Toast.makeText(contact_msg_edit.this," 成功添加新联系人 "+nameInput_EditText.getText().toString(),Toast.LENGTH_SHORT).show();
             }
         } else if(getIntent().getStringExtra("option").equals("Edit")){
-
             if(db.update("contact_list_database",values,"phone=?",new String[]{phoneInput_EditText.getText().toString()})==-1){
                 Toast.makeText(this,"Fail",Toast.LENGTH_SHORT).show();
             }
-
         }
-
-
     }
 
     /**
-     * 将新增项的主码传回上一个Activity
+     * 将修改/新增项的主码phone传回上一个Activity
      */
     private void primaryKeyReturn(){
         Intent intent=new Intent();
@@ -326,9 +361,15 @@ public class contact_msg_edit extends AppCompatActivity {
         setResult(RESULT_OK,intent);
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        /*
+        requestCode == 1
+            相册返回
+        requestCode == 2
+            图片裁剪返回
+         */
+
         if(requestCode==1){
             if(data!=null){
                 Uri uri;
@@ -352,7 +393,6 @@ public class contact_msg_edit extends AppCompatActivity {
                 }
             }
         }
-
         super.onActivityResult(requestCode, resultCode, data);
     }
 
@@ -371,7 +411,6 @@ public class contact_msg_edit extends AppCompatActivity {
             return saveBitmap(bitmap);
         } catch (IOException e){
             e.printStackTrace();
-
             return null;
         }
     }
@@ -382,19 +421,6 @@ public class contact_msg_edit extends AppCompatActivity {
      * @return 文件的Uri
      */
     private Uri saveBitmap(Bitmap bitmap) {
-        /*
-        int REQUEST_EXTERNAL_STORAGE = 1;
-        String[] PERMISSIONS_STORAGE = {
-                "android.permission.READ_EXTERNAL_STORAGE",
-                "android.permission.WRITE_EXTERNAL_STORAGE" };
-        int permission= ActivityCompat.checkSelfPermission(new_contact_msg_input.this,
-                "android.permission.WRITE_EXTERNAL_STORAGE");
-        if(permission!= PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(new_contact_msg_input.this,
-                    PERMISSIONS_STORAGE,REQUEST_EXTERNAL_STORAGE);
-        }
-
-         */
 
         File img=new File(getExternalCacheDir(),"avatar_image.png");
         try{
@@ -402,26 +428,25 @@ public class contact_msg_edit extends AppCompatActivity {
                 if(img.createNewFile()){
                     Log.d("My","createNewFile Success");
                 }
-        }catch (IOException e){
-            e.printStackTrace();
-            return null;
-        }
-        try{
             FileOutputStream fileOutputStream=new FileOutputStream(img);
-            bitmap.compress(Bitmap.CompressFormat.PNG,100,fileOutputStream);
+            bitmap.compress(Bitmap.CompressFormat.PNG,70,fileOutputStream);
             fileOutputStream.flush();
             fileOutputStream.close();
 
             //需要指定Activity名
             return FileProvider.getUriForFile(contact_msg_edit.this,"com.example.contact_book.fileprovider",img);
             //return Uri.fromFile(img);
-        }catch(IOException e){
+        } catch (IOException e){
             e.printStackTrace();
-
             return null;
         }
+
     }
 
+    /**
+     * 打开相册
+     * @param view View
+     */
     public void gallery(View view){
         Intent intent=new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
@@ -429,6 +454,10 @@ public class contact_msg_edit extends AppCompatActivity {
         startActivityForResult(intent,1);
     }
 
+    /**
+     * 裁剪图片
+     * @param uri 图片Uri
+     */
     private void crop(Uri uri){
 
         Log.d("My",uri.toString());
@@ -460,6 +489,10 @@ public class contact_msg_edit extends AppCompatActivity {
         startActivityForResult(intent,2);
     }
 
+    /**
+     * 将Bitmap转为byte[]写入数据库
+     * @return byte[]
+     */
     private byte[] bitmapToByte(){
         ByteArrayOutputStream byteArrayOutputStream=new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.PNG,100,byteArrayOutputStream);

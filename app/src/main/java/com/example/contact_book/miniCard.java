@@ -1,14 +1,9 @@
 package com.example.contact_book;
 
-import android.graphics.Bitmap;
-import android.os.Parcel;
-import android.os.Parcelable;
-
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.io.Serializable;
-
-public class miniCard {
+public class miniCard implements Cloneable{
     public String name;
     public String nickname;
     public String phone;
@@ -20,14 +15,7 @@ public class miniCard {
     public String note;
     public int star=0;
     public String relationship;
-    public Bitmap avatar;
-
-    miniCard(String _name, String _phone, String _relationship, Bitmap _avatar){
-        name=_name;
-        phone=_phone;
-        relationship=_relationship;
-        avatar=_avatar;
-    }
+    public byte[] avatar=null;
 
     miniCard(){}
 
@@ -37,5 +25,28 @@ public class miniCard {
             miniCard card = (miniCard) obj;
             return this.phone.equals(card.phone);
         } else return false;
+    }
+
+    @NonNull
+    @Override
+    public miniCard clone() throws CloneNotSupportedException {
+        miniCard card = new miniCard();
+        if (this.avatar == null){
+            card.avatar = null;
+        } else {
+            card.avatar = this.avatar.clone();
+        }
+        card.name = this.name;
+        card.nickname = this.nickname;
+        card.phone = this.phone;
+        card.note = this.note;
+        card.company = this.company;
+        card.phoneType = this.phoneType;
+        card.relationship = this.relationship;
+        card.address = this.address;
+        card.remark = this.remark;
+        card.email = this.email;
+        card.star = this.star;
+        return card;
     }
 }

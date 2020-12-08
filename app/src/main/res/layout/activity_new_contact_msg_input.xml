@@ -49,7 +49,7 @@
                     android:background="@mipmap/star"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"/>
+                    app:layout_constraintEnd_toEndOf="parent" />
 
                 <com.example.contact_book.StringPicker
                     android:id="@+id/relationshipPicker"
@@ -404,10 +404,5 @@
         android:layout_gravity="bottom|end"
         android:text="Save"
         android:onClick="saveButtonClick"/>
-
-
-
-
-
 
 </LinearLayout>

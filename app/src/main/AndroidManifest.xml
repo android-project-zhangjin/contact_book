@@ -27,10 +27,10 @@
         <activity android:name=".CareText" />
         <activity
             android:name=".contact_msg_edit"
-            android:theme="@style/NoTitleFullscreen" />
+            android:label="Edit" />
         <activity
             android:name=".MainActivity"
-            android:theme="@style/NoTitleFullscreen" />
+            android:label="Contacts Book" />
         <activity
             android:name=".LauchActivity"
             android:theme="@style/NoTitleFullscreen">
