@@ -27,7 +27,8 @@
         <activity android:name=".CareText" />
         <activity
             android:name=".contact_msg_edit"
-            android:label="Edit" />
+            android:label="Edit"
+            android:theme="@style/NoTitleFullscreen"/>
         <activity
             android:name=".MainActivity"
             android:label="Contacts Book" />

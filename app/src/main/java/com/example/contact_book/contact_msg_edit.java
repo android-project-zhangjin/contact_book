@@ -43,6 +43,8 @@ public class contact_msg_edit extends AppCompatActivity {
     //连接、操作数据库使用的变量
     private MySQLiteOpenHelper mySQLiteOpenHelper;
     private SQLiteDatabase db;
+
+    int resultCode = RESULT_CANCELED;
     
     //存入数据库的值
     ContentValues values=new ContentValues();
@@ -325,6 +327,7 @@ public class contact_msg_edit extends AppCompatActivity {
                 Toast.makeText(contact_msg_edit.this,"该号码已存在",Toast.LENGTH_LONG).show();
             }
             else {
+                resultCode = RESULT_OK;
                 ContentValues valuesToSysContactsDataBase = new ContentValues();
                 //向系统联系人表中插入数据
                 Uri rawContactUri = getContentResolver().insert(ContactsContract.RawContacts.CONTENT_URI,valuesToSysContactsDataBase);
@@ -348,6 +351,8 @@ public class contact_msg_edit extends AppCompatActivity {
         } else if(getIntent().getStringExtra("option").equals("Edit")){
             if(db.update("contact_list_database",values,"phone=?",new String[]{phoneInput_EditText.getText().toString()})==-1){
                 Toast.makeText(this,"Fail",Toast.LENGTH_SHORT).show();
+            } else {
+                resultCode = RESULT_OK;
             }
         }
     }
@@ -358,7 +363,7 @@ public class contact_msg_edit extends AppCompatActivity {
     private void primaryKeyReturn(){
         Intent intent=new Intent();
         intent.putExtra("phone",phoneInput_EditText.getText().toString());
-        setResult(RESULT_OK,intent);
+        setResult(resultCode,intent);
     }
 
     @Override
