@@ -389,7 +389,7 @@
                             }).create();
                     alert.show();
                 } else if(id==R.id.callButton){
-                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                    Intent intent = new Intent(Intent.ACTION_CALL);
                     Uri data = Uri.parse("tel:" + dataList.get(position).phone);
                     intent.setData(data);
                     startActivity(intent);

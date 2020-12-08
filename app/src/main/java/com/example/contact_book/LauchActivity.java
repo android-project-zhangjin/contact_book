@@ -31,7 +31,8 @@ public class LauchActivity extends AppCompatActivity {
             Manifest.permission.READ_SMS,
             Manifest.permission.SEND_SMS,
             Manifest.permission.READ_CONTACTS,
-            Manifest.permission.WRITE_CONTACTS
+            Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.CALL_PHONE
     };
 
     private ImageView logo_1;
