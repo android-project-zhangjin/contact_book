@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TableLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -42,6 +43,7 @@ import java.util.List;
 //通话记录所使用的Fragment
 public class RecordFragment extends Fragment {
     public final String TAG = "MAIN";                       //log使用的tag
+    private int ifRefresh = 0;
     private Context context;
     private View view;
     private SQLiteDatabase db;
@@ -60,6 +62,7 @@ public class RecordFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.record_list, container, false);
         long startTime = System.currentTimeMillis(); // 获取开始时间
+        recordList.clear();
         initRecord();       // 初始化通话记录数据
         long endTime = System.currentTimeMillis(); // 获取结束时间
         Log.e("MAIN", "初始化数据时间： " + (endTime - startTime) + "ms");
@@ -73,6 +76,7 @@ public class RecordFragment extends Fragment {
         recyclerView.addItemDecoration(dividerItemDecoration);
         recyclerView.setLayoutManager(layoutManager);
         setAdapter(recordList);
+        ifRefresh = 1;  //防止Resume中继续调用initRecord()
         return view;
     }
 
@@ -95,7 +99,9 @@ public class RecordFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        refresh();
+//        if (ifRefresh == 1) {
+//            ifRefresh = 0;
+//        } else refresh();
     }
 
     @Override
@@ -141,15 +147,16 @@ public class RecordFragment extends Fragment {
         List<String> number_date_new = new ArrayList<String>();         //保存准备插入通话记录数据库的新信息
         //从数据库读取数据初始化两个list
         Cursor cursor_place = db.rawQuery("select * from number_place_database", null);
-        if (cursor_place.getCount() != 0)
+        if (cursor_place.getCount() != 0) {
             while (cursor_place.moveToNext()) {
                 String num_place = cursor_place.getString(cursor_place.getColumnIndex("number"));
                 number_place.add(num_place);
             }
-        else
-            Toast.makeText(context, "首次查询归属地，请稍等", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(context, "首次查询归属地，请稍等10秒", Toast.LENGTH_SHORT).show();
+        }
         Cursor cursor_num_date = db.rawQuery("select * from record_list_database", null);
-        if (cursor_num_date.getCount()!=0)
+        if (cursor_num_date.getCount() != 0)
             while (cursor_num_date.moveToNext()) {
                 String num_date = cursor_num_date.getString(cursor_num_date.getColumnIndex("number")) +
                         cursor_num_date.getString(cursor_num_date.getColumnIndex("date"));
@@ -177,22 +184,23 @@ public class RecordFragment extends Fragment {
                 if (name == null || name.equals("")) //没有姓名的联系人用电话号码代替
                     name = number;
                 if (!number_date.contains(number + date)) {   //如果数据是不重复的,单条通话记录放入number_date_new
-                    number_date_new.add(name+","+number+","+date+","+time+","+type);
-                    if (!number_place.contains(number)||number_place.size()==0) {   //把要更新归属地的号码插入列表number_place_wait
+                    number_date_new.add(name + "," + number + "," + date + "," + time + "," + type);
+                    if (!number_place.contains(number) || number_place.size() == 0) {   //把要更新归属地的号码插入列表number_place_wait
                         number_place.add(number);
                         number_place_wait.add(number);
                     }
                 }
             }
             //插入联系人信息
-            if (number_date_new.size()>0){
+            if (number_date_new.size() > 0) {
                 StringBuilder sql = new StringBuilder("insert into record_list_database (name,number,date,time,type) values ");
                 for (String ndn : number_date_new) {
                     try {
                         String content = "( \"" + ndn.split(",")[0] + "\",\"" + ndn.split(",")[1] + "\",\""
-                                + ndn.split(",")[2] + "\",\""+ ndn.split(",")[3] + "\",\""+ ndn.split(",")[4] + "\"),";
+                                + ndn.split(",")[2] + "\",\"" + ndn.split(",")[3] + "\",\"" + ndn.split(",")[4] + "\"),";
                         sql.append(content);
-                    } catch (Exception e) {}
+                    } catch (Exception e) {
+                    }
                 }
                 String str_sql = sql.toString();
                 str_sql = str_sql.substring(0, str_sql.length() - 1) + ";";
@@ -204,18 +212,20 @@ public class RecordFragment extends Fragment {
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        for (String npw : number_place_wait)
-                            number_place_new.add(npw + "," + getPlace(npw));
+                        for (int i =0;i< number_place_wait.size();i++){
+                            number_place_new.add(number_place_wait.get(i) + "," + getPlace(number_place_wait.get(i)));
+                            Log.d(TAG,"获取归属地："+i+"/"+number_place_wait.size());
+                        }
                         //把新的归属地数据插入num_place
                         if (number_place_new.size() > 0) {
                             StringBuilder sql = new StringBuilder("insert into number_place_database values ");
                             for (String npn : number_place_new) {
                                 Log.d(TAG, npn);
+                                String content = "";
                                 try {
-                                    String content = "( " + npn.split(",")[0] + ",\"" + npn.split(",")[1] + "\"),";
+                                    content = "( " + npn.split(",")[0] + ",\"" + npn.split(",")[1] + "\"),";
                                     sql.append(content);
                                 } catch (Exception e) {
-
                                 }
                             }
                             String str_sql = sql.toString();
@@ -226,6 +236,7 @@ public class RecordFragment extends Fragment {
                     }
                 }).start();
             }
+            //Toast.makeText(context, "查询归属地完成，本次查询"+number_place_wait.size()+"条数据，重新进入本界面即可查看新增归属地", Toast.LENGTH_LONG).show();
             long endTime = System.currentTimeMillis(); // 获取结束时间
             Log.e("MAIN", "循环一遍通话记录的时间： " + (endTime - startTime) + "ms");
         }
@@ -280,16 +291,6 @@ public class RecordFragment extends Fragment {
         return time;
     }
 
-    private void insertDB(String name, String number, String date, String time, String type) {
-        ContentValues values = new ContentValues();
-        values.put("name", name);
-        values.put("number", number);
-        values.put("date", date);
-        values.put("time", time);
-        values.put("type", type);
-        db.insert("record_list_database", null, values);
-    }
-
     private String getPlace(final String number) {
         String address = "https://tcc.taobao.com/cc/json/mobile_tel_segment.htm?tel=" + number;
         final String[] place = new String[2];
@@ -310,7 +311,6 @@ public class RecordFragment extends Fragment {
                 flag[0] = 1;
                 //Log.d(TAG, place[0]);
             }
-
             @Override
             public void onError(Exception e) {
                 e.printStackTrace();
@@ -324,7 +324,7 @@ public class RecordFragment extends Fragment {
         while (flag[0] != 1) {
             //循环等待
         }
-        Log.d(TAG, "变成循环等待,取得的地址：" + place[0] + "\t");
+        //Log.d(TAG, "变成循环等待,取得的地址：" + place[0] + "\t");
         return place[0];
     }
 
