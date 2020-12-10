@@ -18,7 +18,7 @@
             android:id="@+id/fragment"
 
             android:layout_above="@id/bottom_title" />
-        <!--android:name="com.example.contact_book.contactList"-->
+        <!--android:name="com.example.contact_book.contactFragment"-->
 
         <LinearLayout
             android:id="@+id/bottom_title"

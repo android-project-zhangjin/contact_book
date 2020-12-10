@@ -42,7 +42,7 @@
 
  import static android.app.Activity.RESULT_OK;
 
- public class contactList extends Fragment{
+ public class contactFragment extends Fragment{
     //程序启动首次创建
     private static boolean isFirst=true;
 
@@ -81,8 +81,11 @@
                     SQLiteDatabase db_local = mySQLiteOpenHelper_local.getReadableDatabase();
 
                     Cursor cursor;
-                    for (int i = msg.getData().getInt("first"); i <= msg.getData().getInt("last") && i < dataList.size(); i++) {
-                        cursor = db_local.query("contact_list_database", new String[]{"avatar"}, "phone=?", new String[]{dataList.get(i).phone}, null, null, null);
+                    for (int i = msg.getData().getInt("first"); i <= msg.getData().getInt("last")
+                            && i < dataList.size(); i++) {
+                        cursor = db_local.query("contact_list_database", new String[]{"avatar"},
+                                "phone=?", new String[]{dataList.get(i).phone},
+                                null, null, null);
                         if (cursor.getCount() != 0 && cursor.moveToFirst()) {
                             if (cursor.getBlob(cursor.getColumnIndex("avatar")) != null) {
                                 try {
@@ -107,7 +110,7 @@
         }
     };
 
-    public contactList() {
+    public contactFragment() {
         // Required empty public constructor
     }
 

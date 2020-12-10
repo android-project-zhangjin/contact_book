@@ -1,8 +1,15 @@
 package com.example.contact_book;
 
+import android.annotation.SuppressLint;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.net.Uri;
+import android.provider.ContactsContract;
+import android.util.Log;
 import android.widget.Toast;
 
 public class MySQLiteOpenHelper extends SQLiteOpenHelper {
@@ -56,6 +63,7 @@ public class MySQLiteOpenHelper extends SQLiteOpenHelper {
         db.execSQL(create_contact_list_database_sql);
         db.execSQL(create_record_list_database_sql);
         db.execSQL(create_number_place_database_sql);
+
         //调试时使用
         Toast.makeText(context, "Created！", Toast.LENGTH_LONG).show();
     }

@@ -1,21 +1,13 @@
 package com.example.contact_book;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentManager;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -39,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         final FragmentManager fm =getSupportFragmentManager();
-        final contactList conF=new contactList();
+        final contactFragment conF=new contactFragment();
         final RecordFragment record_fragment=new RecordFragment();
 
         fm.beginTransaction().replace(R.id.fragment,conF).commit();

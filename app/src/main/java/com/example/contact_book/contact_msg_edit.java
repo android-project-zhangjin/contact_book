@@ -402,14 +402,13 @@ public class contact_msg_edit extends AppCompatActivity {
     }
 
     /**
-     * 将content类型的Uri转化为文件类型的Uri
+     * 将content类型的Uri转化为file类型的Uri
      * @param uri content类型Uri
      * @return 文件类型Uri
      */
     private Uri convertUri(Uri uri) {
         InputStream inputStream;
         try{
-
             inputStream=getContentResolver().openInputStream(uri);
             Bitmap bitmap=BitmapFactory.decodeStream(inputStream);
             inputStream.close();
