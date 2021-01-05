@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class LauchActivity extends AppCompatActivity {
+public class LaunchActivity extends AppCompatActivity {
     private final List<String> unPermissionList = new ArrayList<>(); //申请未得到授权的权限列表
     private final String[] permissionList = new String[]{         //申请的权限列表
             Manifest.permission.READ_CALL_LOG,
@@ -63,7 +63,7 @@ public class LauchActivity extends AppCompatActivity {
         @Override
         public void onAnimationEnd(Animation animation) {
             Log.d("My","Hello");
-            startActivity(new Intent(LauchActivity.this,MainActivity.class));
+            startActivity(new Intent(LaunchActivity.this,MainActivity.class));
             finish();
         }
 
@@ -109,13 +109,13 @@ public class LauchActivity extends AppCompatActivity {
     }
 
     private void rotate_scale_positive(View view){
-        Animation animation=AnimationUtils.loadAnimation(LauchActivity.this,R.anim.rotate_scale_positive);
+        Animation animation=AnimationUtils.loadAnimation(LaunchActivity.this,R.anim.rotate_scale_positive);
         animation.setFillAfter(true);
         view.startAnimation(animation);
     }
 
     private void rotate_scale_reverse(View view){
-        Animation animation=AnimationUtils.loadAnimation(LauchActivity.this,R.anim.rotate_scale_reverse);
+        Animation animation=AnimationUtils.loadAnimation(LaunchActivity.this,R.anim.rotate_scale_reverse);
         animation.setFillAfter(true);
         view.startAnimation(animation);
     }

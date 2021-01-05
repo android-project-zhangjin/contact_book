@@ -26,14 +26,14 @@
             android:label="通话详情"/>
         <activity android:name=".CareText" />
         <activity
-            android:name=".contact_msg_edit"
+            android:name=".ContactMsgEdit"
             android:label="Edit"
             android:theme="@style/NoTitleFullscreen"/>
         <activity
             android:name=".MainActivity"
             android:label="Contacts Book" />
         <activity
-            android:name=".LauchActivity"
+            android:name=".LaunchActivity"
             android:theme="@style/NoTitleFullscreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

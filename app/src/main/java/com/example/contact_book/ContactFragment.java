@@ -42,7 +42,7 @@
 
  import static android.app.Activity.RESULT_OK;
 
- public class contactFragment extends Fragment{
+ public class ContactFragment extends Fragment{
     //程序启动首次创建
     private static boolean isFirst=true;
 
@@ -50,7 +50,7 @@
     private static int currPosition = 0;
 
     //静态的列表——避免重复加载
-    private static ArrayList<miniCard> dataList=new ArrayList<>();
+    private static ArrayList<MiniCard> dataList=new ArrayList<>();
     private static final List<String> relationshipList=new ArrayList<>();
     private static final List<String> phoneTypeList=new ArrayList<>();
 
@@ -63,7 +63,7 @@
     private SQLiteDatabase db;
 
     //Adapter
-    private miniCardAdapter mAdapter;
+    private MiniCardAdapter mAdapter;
 
      /**
       * 在子线程中处理图片更新
@@ -76,7 +76,7 @@
             super.handleMessage(msg);
             if (msg.what == 1) {
                 if (mContext != null) {
-                    ArrayList<miniCard> newDataList = new ArrayList<>(dataList);
+                    ArrayList<MiniCard> newDataList = new ArrayList<>(dataList);
                     MySQLiteOpenHelper mySQLiteOpenHelper_local = new MySQLiteOpenHelper(mContext);
                     SQLiteDatabase db_local = mySQLiteOpenHelper_local.getReadableDatabase();
 
@@ -89,7 +89,7 @@
                         if (cursor.getCount() != 0 && cursor.moveToFirst()) {
                             if (cursor.getBlob(cursor.getColumnIndex("avatar")) != null) {
                                 try {
-                                    miniCard tmp = dataList.get(i).clone();
+                                    MiniCard tmp = dataList.get(i).clone();
                                     tmp.avatar = cursor.getBlob(cursor.getColumnIndex("avatar"));
                                     if (!Collections.replaceAll(newDataList, tmp, tmp))
                                         Log.w("My", "修改后的替换出现错误");
@@ -110,7 +110,7 @@
         }
     };
 
-    public contactFragment() {
+    public ContactFragment() {
         // Required empty public constructor
     }
 
@@ -176,7 +176,7 @@
                  @Override
                  public void onClick(View v) {
                      //在启动新增联系人Activity时，要求获得结果，RESULT_OK表示确定，RESULT_CANCEL表示取消
-                     Intent intent=new Intent(getActivity(),contact_msg_edit.class);
+                     Intent intent=new Intent(getActivity(), ContactMsgEdit.class);
                      //传入参数代表“添加”
                      intent.putExtra("option","New");
                      startActivityForResult(intent,1);
@@ -215,24 +215,24 @@
             Log.d("My","sub Thread");
 
             cursor.moveToFirst();
-            ArrayList<miniCard> newDataList = new ArrayList<>(dataList);
+            ArrayList<MiniCard> newDataList = new ArrayList<>(dataList);
 
             if (requestCode==1 && resultCode==RESULT_OK) {
                 //读取数据
                 newDataList.add(readFromDatabase(cursor));
             } else if (requestCode==2 && resultCode==RESULT_OK){
                 //由于从contact_msg_edit返回没能得到item的position，加之数据可能改变，需要在数据库中再次查询
-                miniCard card = readFromDatabase(cursor);
+                MiniCard card = readFromDatabase(cursor);
                 card.avatar = cursor.getBlob(cursor.getColumnIndex("avatar"));
                 if(!Collections.replaceAll(newDataList,card,card))
                     Log.w("My","修改后的替换出现错误");
             }
 
             //中文List排序
-            Collections.sort(newDataList, new Comparator<miniCard>() {
+            Collections.sort(newDataList, new Comparator<MiniCard>() {
                 final Collator collator = Collator.getInstance(Locale.CHINESE);
                 @Override
-                public int compare(miniCard t1, miniCard t2) {
+                public int compare(MiniCard t1, MiniCard t2) {
                     CollationKey key1 = collator.getCollationKey(t1.name);
                     CollationKey key2 = collator.getCollationKey(t2.name);
                     return key1.compareTo(key2);
@@ -252,7 +252,7 @@
          db.close();
      }
 
-     private void flash(ArrayList<miniCard> newDataList, miniCardAdapter adapter){
+     private void flash(ArrayList<MiniCard> newDataList, MiniCardAdapter adapter){
         if(newDataList==null)
             return;
         DiffUtil.DiffResult diffResult= DiffUtil.calculateDiff(new MyDiffCallBack(dataList,newDataList),true);
@@ -263,7 +263,7 @@
     }
 
     //初始化联系人界面
-    private void initDataList(ArrayList<miniCard> mDataList) {
+    private void initDataList(ArrayList<MiniCard> mDataList) {
         mDataList.clear();
 
         //游标
@@ -298,8 +298,8 @@
       * 将数据从数据库中读入，添加到List中
       * @param cursor 游标
       */
-    private miniCard readFromDatabase(Cursor cursor){
-        miniCard card=new miniCard();
+    private MiniCard readFromDatabase(Cursor cursor){
+        MiniCard card=new MiniCard();
         card.name = cursor.getString(cursor.getColumnIndex("name"));
         card.nickname = cursor.getString(cursor.getColumnIndex("nickname"));
         card.phone = cursor.getString(cursor.getColumnIndex("phone"));
@@ -318,10 +318,10 @@
 
     private void initAdapter(){
         //实例化名片的Adapter
-        this.mAdapter=new miniCardAdapter(dataList,getContext());
+        this.mAdapter=new MiniCardAdapter(dataList,getContext());
 
 
-        mAdapter.setOnClickListener(new miniCardAdapter.ViewHolder.MyItemClickListener() {
+        mAdapter.setOnClickListener(new MiniCardAdapter.ViewHolder.MyItemClickListener() {
             @Override
             public void onItemClick(View view, int id, final int position) {
                 if (id == R.id.star_btn_miniView) {
@@ -361,7 +361,7 @@
                         }
                     }
                 } else if(id==R.id.editButton){
-                    Intent intent=new Intent(getActivity(),contact_msg_edit.class);
+                    Intent intent=new Intent(getActivity(), ContactMsgEdit.class);
                     intent.putExtra("option","Edit");
                     intent.putExtra("phone",dataList.get(position).phone);
                     startActivityForResult(intent,2);
@@ -378,7 +378,7 @@
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
                                     if(db.delete("contact_list_database","phone=?",new String[]{dataList.get(position).phone})!=-1){
-                                        ArrayList<miniCard> newDataList=new ArrayList<>(dataList);
+                                        ArrayList<MiniCard> newDataList=new ArrayList<>(dataList);
                                         newDataList.remove(position);
                                         flash(newDataList,mAdapter);
                                     }
@@ -401,7 +401,7 @@
             }
         });
 
-        mAdapter.setOnLongClickListener(new miniCardAdapter.ViewHolder.MyItemLongClickListener() {
+        mAdapter.setOnLongClickListener(new MiniCardAdapter.ViewHolder.MyItemLongClickListener() {
             @Override
             public void onItemLongClick(View view, int id, int position) {
                 if(id==R.id.miniCardView){

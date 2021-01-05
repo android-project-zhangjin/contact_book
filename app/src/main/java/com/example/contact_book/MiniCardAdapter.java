@@ -18,8 +18,8 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHolder> {
-    private List<miniCard> contactList;
+public class MiniCardAdapter extends RecyclerView.Adapter<MiniCardAdapter.ViewHolder> {
+    private List<MiniCard> contactList;
 
     private final Context mContext;
 
@@ -123,19 +123,19 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
         }
     }
 
-    miniCardAdapter(List<miniCard> cardList, Context context){
+    MiniCardAdapter(List<MiniCard> cardList, Context context){
         contactList=cardList;
         mContext=context;
     }
 
-    public void setData(List<miniCard> _contactList){
+    public void setData(List<MiniCard> _contactList){
         contactList=_contactList;
     }
 
 
     @Override
     @NotNull
-    public miniCardAdapter.ViewHolder onCreateViewHolder(@NotNull ViewGroup parent, int viewtype){
+    public MiniCardAdapter.ViewHolder onCreateViewHolder(@NotNull ViewGroup parent, int viewtype){
         View view= LayoutInflater.from(parent.getContext()).inflate(R.layout.minicard_item,parent,false);
         return new ViewHolder(view,myItemClickListener,myItemLongClickListener);
     }
@@ -162,7 +162,7 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
      * @param tmp Item
      * @param holder ViewHolder
      */
-    private void setTextVisibilityForView(miniCard tmp, ViewHolder holder){
+    private void setTextVisibilityForView(MiniCard tmp, ViewHolder holder){
         holder.nameTextView.setText(tmp.name);
         holder.phoneTextView.setText(tmp.phone);
         holder.phoneTypeTextView.setText(tmp.phoneType);
@@ -244,7 +244,7 @@ public class miniCardAdapter extends RecyclerView.Adapter<miniCardAdapter.ViewHo
             onBindViewHolder(holder,position);
             return;
         }
-        miniCard tmp = (miniCard) payloads.get(0);
+        MiniCard tmp = (MiniCard) payloads.get(0);
         holder.avatarImageView.setImageBitmap(BitmapFactory.decodeByteArray(tmp.avatar,0,tmp.avatar.length));
         setTextVisibilityForView(tmp,holder);
         contentSetVisibility(holder);

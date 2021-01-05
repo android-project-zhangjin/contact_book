@@ -9,7 +9,7 @@ import android.widget.EditText;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 
-public class EditText_focus_processor {
+public class EditTextFocusProcessor {
     //启用函数
     public void StartProcess(Context context,View currentFocus,MotionEvent motionEvent){
         if(motionEvent.getAction()==MotionEvent.ACTION_DOWN){

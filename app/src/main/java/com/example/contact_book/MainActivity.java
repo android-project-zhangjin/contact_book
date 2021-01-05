@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         final FragmentManager fm =getSupportFragmentManager();
-        final contactFragment conF=new contactFragment();
+        final ContactFragment conF=new ContactFragment();
         final RecordFragment record_fragment=new RecordFragment();
 
         fm.beginTransaction().replace(R.id.fragment,conF).commit();
@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        new EditText_focus_processor().StartProcess(getBaseContext(), getCurrentFocus(), ev);
+        new EditTextFocusProcessor().StartProcess(getBaseContext(), getCurrentFocus(), ev);
         return super.dispatchTouchEvent(ev);
     }
 

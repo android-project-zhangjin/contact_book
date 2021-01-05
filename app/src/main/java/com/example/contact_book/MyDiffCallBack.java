@@ -8,10 +8,10 @@ import java.util.List;
 
 public class MyDiffCallBack extends DiffUtil.Callback {
 
-    private final List<miniCard> oldList;
-    private final List<miniCard> newList;
+    private final List<MiniCard> oldList;
+    private final List<MiniCard> newList;
 
-    MyDiffCallBack(List<miniCard> oldList, List<miniCard> newList){
+    MyDiffCallBack(List<MiniCard> oldList, List<MiniCard> newList){
         this.oldList=oldList;
         this.newList=newList;
     }
@@ -27,8 +27,8 @@ public class MyDiffCallBack extends DiffUtil.Callback {
 
     @Override
     public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-        miniCard oldItem=oldList.get(oldItemPosition);
-        miniCard newItem=newList.get(newItemPosition);
+        MiniCard oldItem=oldList.get(oldItemPosition);
+        MiniCard newItem=newList.get(newItemPosition);
         return oldItem.equals(newItem);
     }
 
@@ -37,8 +37,8 @@ public class MyDiffCallBack extends DiffUtil.Callback {
      */
     @Override
     public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-        miniCard oldItem=oldList.get(oldItemPosition);
-        miniCard newItem=newList.get(newItemPosition);
+        MiniCard oldItem=oldList.get(oldItemPosition);
+        MiniCard newItem=newList.get(newItemPosition);
 
         if(oldItem.avatar == null){
             if(newItem.avatar == null){

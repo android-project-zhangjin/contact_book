@@ -3,7 +3,7 @@ package com.example.contact_book;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class miniCard implements Cloneable{
+public class MiniCard implements Cloneable{
     public String name;
     public String nickname;
     public String phone;
@@ -17,20 +17,20 @@ public class miniCard implements Cloneable{
     public String relationship;
     public byte[] avatar=null;
 
-    miniCard(){}
+    MiniCard(){}
 
     @Override
     public boolean equals(@Nullable Object obj) {
-        if (obj instanceof miniCard){
-            miniCard card = (miniCard) obj;
+        if (obj instanceof MiniCard){
+            MiniCard card = (MiniCard) obj;
             return this.phone.equals(card.phone);
         } else return false;
     }
 
     @NonNull
     @Override
-    public miniCard clone() throws CloneNotSupportedException {
-        miniCard card = new miniCard();
+    public MiniCard clone() throws CloneNotSupportedException {
+        MiniCard card = new MiniCard();
         if (this.avatar == null){
             card.avatar = null;
         } else {
